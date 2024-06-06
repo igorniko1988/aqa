@@ -16,6 +16,8 @@ jobs:
           python-version: '3.x'
       - name: Install Chrome
         run: sudo apt-get install google-chrome-stable
+      - name: Additional command for Chrome
+        run: sudo apt-get install -y libnss3 libasound2 libxss1 libappindicator1 libindicator7
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
@@ -40,6 +42,6 @@ jobs:
         if: always()
         uses: peaceiris/actions-gh-pages@v2
         env:
-          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERSONAL_TOKEN: ${{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}}
           PUBLISH_BRANCH: gh-pages
           PUBLISH_DIR: allure-history
