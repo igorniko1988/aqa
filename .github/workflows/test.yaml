@@ -1,52 +1,61 @@
-name: Test
+name: Run Python Tests with Allure and Selenium
 
-on:
-  push:
-    branches:
-      - "main"
+on: [push, pull_request]
+
 jobs:
   test:
-    name: Test
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.x
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '3.12'
+
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install allure-pytest
+
       - name: Install Chrome dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y unzip xvfb libxi6 libgconf-2-4
+
       - name: Install Chrome
         run: |
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -fy install
-      - name: Install dependencies
-        run: |
-          pytest --alluredir=allure-results
 
-      - name: Get Allure history
-        uses: actions/checkout@v2
-        if: always()
-        continue-on-error: true
+      - name: Install ChromeDriver
+        run: |
+          CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+          CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%.*})
+          wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip -d /usr/local/bin
+
+      - name: Run tests with Pytest and generate Allure results
+        run: |
+          xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' pytest --alluredir=./allure-results
+
+      - name: Upload Allure results
+        uses: actions/upload-artifact@v2
         with:
-          ref: gh-pages
-          path: gh-pages
-      - name: Allure Report action from marketplace
-        uses: simple-elf/allure-report-action@master
-        if: always()
+          name: allure-results
+          path: ./allure-results
+
+      - name: Generate Allure report
+        uses: allure-framework/allure2-action@v1
         with:
-          allure_results: allure-results
-          allure_history: allure-history
-          keep_reports: 20
-      - name: Deploy report to Github Pages
-        if: always()
-        uses: peaceiris/actions-gh-pages@v2
-        env:
-          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISH_BRANCH: gh-pages
-          PUBLISH_DIR: allure-history
+          results: ./allure-results
+          report: ./allure-report
+
+      - name: Upload Allure report
+        uses: actions/upload-artifact@v2
+        with:
+          name: allure-report
+          path: ./allure-report
