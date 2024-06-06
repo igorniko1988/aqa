@@ -1,52 +1,41 @@
-name: Allure Report
+name: Test
 
 on:
   push:
-    branches-ignore:
-      - '!main'
-
+    branches:
+      - "main"
 jobs:
-  autotests:
-    name: Run tests and generate Allure Report
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v2
       - name: Set up Python 3.x
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
-
+      - name: Install Chrome
+        run: sudo apt-get install google-chrome-stable
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Check code style
-        if: always()
+      - name: Install dependencies
         run: |
-          flake8
-
-      - name: Run Test
-        if: always()
-        run: pytest --alluredir=allure-results
-        continue-on-error: true
-
+          pytest --alluredir=allure-results
       - name: Get Allure history
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         if: always()
         continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
-
       - name: Allure Report action from marketplace
-        uses: simple-elf/allure-report-action@v1.7
+        uses: simple-elf/allure-report-action@master
         if: always()
         with:
           allure_results: allure-results
           allure_history: allure-history
-
+          keep_reports: 20
       - name: Deploy report to Github Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v2
