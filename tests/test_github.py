@@ -2,7 +2,6 @@ from selene import browser, by, be, have
 import pytest
 import allure
 
-
 def test_github_issue():
 
     with allure.step('open github page'):
