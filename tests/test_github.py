@@ -14,7 +14,7 @@ def test_github_issue():
         browser.element('#query-builder-test').type('eroshenkoam/allure-examples').press_enter()
 
     with allure.step('click issues'):
-        browser.element(by.link_text('Issusadses')).click()
+        browser.element(by.link_text('Issues')).click()
 
     with allure.step('check 66 issue'):
-        browser.element(by.partial_link_text('#66')).should(be.visible)
+        browser.element(by.partial_link_text('asd#66')).should(be.visible)
